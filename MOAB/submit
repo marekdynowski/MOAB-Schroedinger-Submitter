@@ -1,0 +1,98 @@
+#!/bin/sh
+#
+#  Wrapper script for PBS job submission
+#
+#set -x
+msubout=.msub$$
+
+HOST=`hostname`
+PATH=$PATH:/usr/bin:/bin:/usr/sbin:/usr/bsd:/usr/local/bin
+
+# establish path and command name
+MPATH=/opt/moab/bin
+MSUB=msub
+
+curdir=`echo "$0" | sed -e 's#/[^/]*$##'`
+if [ -f "$curdir/config" ]; then
+  . "$curdir/config"
+fi
+
+if [ -n "$MPROFILE" ]; then
+  if [ -f "$MPROFILE" ]; then
+    . "$MPROFILE"
+  else 
+    echo "ERROR: Setup script \"$MPROFILE\" not found."
+    exit 1
+  fi
+fi 
+
+if [ -n "$MPATH" ]; then
+  PATH=$MPATH:$PATH
+fi
+
+# Verify commandline args
+if [ $# -gt 0 ]; then
+  script="$1"
+  shift
+else
+  echo "ERROR: Usage:   submit <script> [<options>]"
+  exit 1
+fi
+
+ARGS=""
+MLOG=""
+LICENSE_ARGS=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -lic) # LICENSE_ARGS="$LICENSE_ARGS -l $2"
+          shift 2 ;;
+      -o) MLOG="$2"
+          shift 2 ;;
+       *) ARGS="$ARGS \"$1\"" 
+          shift ;;
+  esac
+done
+
+if [ -n "$MLOG" ]; then
+  touch "$MLOG" 2>&- || MLOG="/dev/null"
+  ARGS="$ARGS -o '$MLOG'"
+fi
+
+if [ -z "$LICENSE_CHECKING" ]; then
+  LICENSE_ARGS=""
+fi
+  
+if [ "$script" != "-" -a ! -f "$script" ]; then
+  echo "ERROR: File not found: \"$script\""
+  exit 1
+fi
+
+if [ -z "`which $MSUB 2>/dev/null`" -a ! -x "$MPATH/$MSUB" -a ! -x "$MSUB" ]; then
+  echo "ERROR: Submission command \"$MSUB\" on host \"$HOST\" not found."
+  echo "ERROR: (i) Is the Host: field in your schrodinger.hosts entry correct?"
+  echo "ERROR: (ii) Are the MPATH and MSUB settings in $curdir/config correct?"
+  exit 1
+fi
+
+RAND_HEX=`cat /dev/urandom | tr -cd 'a-f0-9' | head -c 8`
+JOBID_FILE=~/.schrodinger/tmp/jobid_${RAND_HEX}
+
+ARGS="$ARGS -v \"SCHRODINGER_TMPJOBIDFILE=$JOBID_FILE\""
+
+# Submit job
+eval $MSUB $MARGS $ARGS $LICENSE_ARGS -S /bin/sh \"$script\" > $msubout
+
+# Report outcome of job submission
+# Delete first line which is empty
+batchid=`cat $msubout | sed '1d'`
+if [ -n "$batchid" ]; then
+    touch $JOBID_FILE
+    echo "$batchid" > $JOBID_FILE
+    echo "BatchId: $batchid"
+    rm $msubout
+    exit 0
+else
+    cat $msubout | sed 's/\(.*\)/ERROR: \1/'
+    rm $msubout
+    exit 1
+fi

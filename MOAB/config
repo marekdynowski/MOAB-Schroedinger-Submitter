@@ -1,0 +1,23 @@
+# Configuration for MOAB job submission
+#
+# The following variables should be defined here:
+#
+# MPATH ..... absolute pathname for the directory where the PBS
+#             commands ('qsub', etc.) are installed.
+# MPROFILE .. absolute pathname for a setup script, which will be
+#               executed before running any queue commands.
+# MSUB ...... the name of the job submission command (typically 'qsub')
+# MDEL ...... the name of the job cancellation command (typically 'qdel')
+# MSTAT ..... the name of the job status command (typically 'qstat')
+#
+# LICENSE_CHECKING ... support license checking?
+#                      (any non-blank value turns on license-checking)
+#
+# For assistance, please contact help@schrodinger.com
+#
+MPATH=/opt/moab/bin
+MPROFILE=
+MSUB=msub
+MDEL=canceljob
+MSTAT=checkjob
+LICENSE_CHECKING=
