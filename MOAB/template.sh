@@ -11,7 +11,7 @@ PATH=/usr/bin:/bin:/usr/bsd:/usr/sbin:/sbin:/usr/local/bin:$PATH
 
 MPATH=/opt/moab/bin
 curdir=`echo $0 | sed -e 's#/[^/]*$##'`
-if [ -f "$curdopt/moabir/config" ]; then
+if [ -f "$curdir/config" ]; then
   . $curdir/config
 fi
 

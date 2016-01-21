@@ -28,7 +28,7 @@ def form_command(keywords, batchids):
         cmd = ". \"%s\"; "% keywords["MPROFILE"]
     keepnum = lambda x: re.sub(r'\D.+', "", x)
     numbatchids = map(keepnum, batchids)
-    cmd += "%s %s"% (keywords["QDEL"], ' '.join(numbatchids))
+    cmd += "%s %s"% (keywords["MDEL"], ' '.join(numbatchids))
     return cmd
 
 def cancelJobs(batchids):
